@@ -36,6 +36,13 @@ def cv2ImgAddText(img, text, pos, textColor=(255, 0, 0), textSize=12):
 
     return cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
 
+"""
+@ brief: draw the box and text on the image
+@ param: img: the image to draw
+@ param: text: the text to draw
+@ param: box: the box to draw
+@ return: the image with box and text
+"""
 def cv2ImgAddText(img, text, box):
     x1, y1, x2, y2 = [int(box[j]) for j in range(4)] 
     fontsize = int ((x2 - x1) / text.__len__() * 1.5)
