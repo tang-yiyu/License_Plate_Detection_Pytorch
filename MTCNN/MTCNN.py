@@ -158,7 +158,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='MTCNN Demo')
     parser.add_argument("--test_image", dest='test_image', help=
-    "test image path", default="test/28.jpg", type=str)
+    "test image path", default="../CL01_ZIC0/425.png", type=str)
     parser.add_argument("--scale", dest='scale', help=
     "scale the iamge", default=1, type=int)
     parser.add_argument('--mini_lp', dest='mini_lp', help=
@@ -179,9 +179,12 @@ if __name__ == '__main__':
 
     for i in range(bboxes.shape[0]):
         bbox = bboxes[i, :4]
-        cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
+        # cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
         
     image = cv2.resize(image, (0, 0), fx = 1/args.scale, fy = 1/args.scale, interpolation=cv2.INTER_CUBIC)
-    cv2.imshow('image', image)
+    cropped_image = image[int(bboxes[0, 1]):int(bboxes[0, 3]), int(bboxes[0, 0]):int(bboxes[0, 2])]
+    cv2.imshow('cropped_image', cropped_image)
+    cv2.imwrite('cropped_image.png', cropped_image)
+    # cv2.imshow('image', image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

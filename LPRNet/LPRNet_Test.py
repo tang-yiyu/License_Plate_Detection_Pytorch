@@ -30,10 +30,40 @@ def cv2ImgAddText(img, text, pos, textColor=(255, 0, 0), textSize=12):
     if (isinstance(img, np.ndarray)):  # detect opencv format or not
         img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(img)
-    fontText = ImageFont.truetype("data/NotoSansCJK-Regular.ttc", textSize, encoding="utf-8")
+    fontText = ImageFont.truetype("LPRNet/data/NotoSansCJK-Regular.ttc", textSize, encoding="utf-8") # use in main.py
+    # fontText = ImageFont.truetype("data/NotoSansCJK-Regular.ttc", textSize, encoding="utf-8") # use in LPRNet_Test.py
     draw.text(pos, text, textColor, font=fontText)
 
     return cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+
+def cv2ImgAddText(img, text, box):
+    x1, y1, x2, y2 = [int(box[j]) for j in range(4)] 
+    fontsize = int ((x2 - x1) / text.__len__() * 1.5)
+    textboxcolor = (50, 50, 255)
+    boxcolor = textboxcolor
+    fontcolor = (255, 255, 255)
+    font = ImageFont.truetype("LPRNet/data/NotoSansCJK-Regular.ttc", fontsize, encoding="utf-8") # use in main.py
+    # font = ImageFont.truetype("data/NotoSansCJK-Regular.ttc", fontsize, encoding="utf-8") # use in LPRNet_Test.py
+
+    if y1 - fontsize > 0:
+        # 识别文字在上方显示
+        cv2.rectangle(img, (x1, y1), (x2, y2), boxcolor, 2, cv2.LINE_AA)
+        cv2.rectangle(img, (x1, y1 - fontsize), (x2, y1), textboxcolor, -1)
+        data = Image.fromarray(img)
+        draw = ImageDraw.Draw(data)
+        draw.text((x1 + ((x2 - x1) - text.__len__() * fontsize / 1.5), y1 - fontsize - fontsize / 4), text, fontcolor, font = font)
+    else:
+        # 识别文字在下方显示
+        cv2.rectangle(img, (x1, y1), (x2, y2), boxcolor, 2, cv2.LINE_AA)
+        cv2.rectangle(img, (x1, y2), (x2, y2 + fontsize), textboxcolor, -1)
+        data = Image.fromarray(img)
+        draw = ImageDraw.Draw(data)
+        draw.text((x1 + ((x2 - x1) - text.__len__() * fontsize / 1.5), y2 - fontsize / 4), text, fontcolor, font = font)
+
+    
+    res = np.asarray(data)
+
+    return res
 
 def decode(preds, CHARS):
     # greedy decode
@@ -66,7 +96,8 @@ def decode(preds, CHARS):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='LPR Demo')
-    parser.add_argument("-image", help='image path', default='data/ccpd_weather/吉BTW976.jpg', type=str)
+    # parser.add_argument("-image", help='image path', default='data/ccpd_weather/吉BTW976.jpg', type=str)
+    parser.add_argument("-image", help='image path', default='data/cropped_image.png', type=str)
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -94,12 +125,16 @@ if __name__ == '__main__':
     labels, pred_labels = decode(preds, CHARS)
     print("model inference in {:2.3f} seconds".format(time.time() - since))
             
-    img = cv2ImgAddText(image, labels[0], (0, 0))
+    # img = cv2ImgAddText(image, labels[0], (0, 0))
+    # img = cv2ImgAddText(image, labels[0], bbox)
     
+    cv2.imshow("cropped", image)
+
     transformed_img = convert_image(transfer)
     cv2.imshow('transformed', transformed_img)
+    cv2.imwrite('data/transformed_image.png', transformed_img)
     
-    cv2.imshow("test", img)
+    # cv2.imshow("test", img)
     cv2.waitKey()
     cv2.destroyAllWindows()
     

@@ -19,7 +19,7 @@ import cv2
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='MTCNN & LPR Demo')
-    parser.add_argument("-image", help='image path', default='test/8.jpg', type=str)
+    parser.add_argument("-image", help='image path', default='CL01_ZIC0/425.png', type=str)
     parser.add_argument("--scale", dest='scale', help="scale the iamge", default=1, type=int)
     parser.add_argument('--mini_lp', dest='mini_lp', help="Minimum face to be detected", default=(50, 15), type=int)
     args = parser.parse_args()
@@ -42,10 +42,26 @@ if __name__ == '__main__':
     image = cv2.resize(image, (0, 0), fx = args.scale, fy = args.scale, interpolation=cv2.INTER_CUBIC)
     bboxes = create_mtcnn_net(image, args.mini_lp, device, p_model_path='MTCNN/weights/pnet_Weights', o_model_path='MTCNN/weights/onet_Weights')
     
+    # judge if bboxes is empty
+    if bboxes is None:
+        print("Can't detect any face!")
+        exit(0)
+    print(bboxes)
+
+    # judge if bboxes has negative value
+    if int(bboxes[0, 0]) < 0:
+        bboxes[0, 0] = 0
+    if int(bboxes[0, 1]) < 0:
+        bboxes[0, 1] = 0
+
+    cropped_image = image[int(bboxes[0, 1]):int(bboxes[0, 3]), int(bboxes[0, 0]):int(bboxes[0, 2])]
+    cv2.imshow('cropped_image', cropped_image)
+    # cv2.imwrite('cropped_image.png', cropped_image)
+    
     for i in range(bboxes.shape[0]):
          
         bbox = bboxes[i, :4]
-        x1, y1, x2, y2 = [int(bbox[j]) for j in range(4)]      
+        x1, y1, x2, y2 = [int(bbox[j]) for j in range(4)]
         w = int(x2 - x1 + 1.0)
         h = int(y2 - y1 + 1.0)
         img_box = np.zeros((h, w, 3))
@@ -58,11 +74,13 @@ if __name__ == '__main__':
         preds = preds.cpu().detach().numpy()  # (1, 68, 18)    
         labels, pred_labels = decode(preds, CHARS)
     
-        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 1)
-        image = cv2ImgAddText(image, labels[0], (x1, y1-12), textColor=(255, 255, 0), textSize=15)
+        # cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 1)
+        # image = cv2ImgAddText(image, labels[0], (x1, y1-12), textColor=(0, 0, 0), textSize=15)
+        image = cv2ImgAddText(image, labels[0], bbox)
     
     print("model inference in {:2.3f} seconds".format(time.time() - since))      
     image = cv2.resize(image, (0, 0), fx = 1/args.scale, fy = 1/args.scale, interpolation=cv2.INTER_CUBIC)
     cv2.imshow('image', image)
+    # cv2.imwrite('result.png', image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
