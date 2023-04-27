@@ -61,8 +61,7 @@ for epoch in range(num_epochs):
         # iterate over data
         for i_batch, sample_batched in enumerate(dataloaders[phase]):
 
-            input_images, gt_label, gt_offset = sample_batched['input_img'], sample_batched[
-                'label'], sample_batched['bbox_target']
+            input_images, gt_label, gt_offset = sample_batched['input_img'], sample_batched['label'], sample_batched['bbox_target']
             input_images = input_images.to(device)
             gt_label = gt_label.to(device)
             # print('gt_label is ', gt_label)

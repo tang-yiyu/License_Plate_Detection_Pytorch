@@ -1,5 +1,5 @@
 """
-    generate positive, negative, positive images whose size are 24*24 from Pnet and feed into RNet
+    generate positive, negative, positive images whose size are 24*94 from Pnet and feed into ONet
 """
 import sys
 sys.path.append('..')

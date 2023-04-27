@@ -53,10 +53,6 @@ if __name__ == '__main__':
         bboxes[0, 0] = 0
     if int(bboxes[0, 1]) < 0:
         bboxes[0, 1] = 0
-
-    cropped_image = image[int(bboxes[0, 1]):int(bboxes[0, 3]), int(bboxes[0, 0]):int(bboxes[0, 2])]
-    cv2.imshow('cropped_image', cropped_image)
-    # cv2.imwrite('cropped_image.png', cropped_image)
     
     for i in range(bboxes.shape[0]):
          
@@ -66,6 +62,8 @@ if __name__ == '__main__':
         h = int(y2 - y1 + 1.0)
         img_box = np.zeros((h, w, 3))
         img_box = image[y1:y2+1, x1:x2+1, :]
+        # cv2.imshow('cropped_image', img_box)
+        # cv2.imwrite('cropped_image.png', img_box)
         im = cv2.resize(img_box, (94, 24), interpolation=cv2.INTER_CUBIC)
         im = (np.transpose(np.float32(im), (2, 0, 1)) - 127.5)*0.0078125
         data = torch.from_numpy(im).float().unsqueeze(0).to(device)  # torch.Size([1, 3, 24, 94]) 

@@ -121,10 +121,13 @@ def detect_onet(onet, image, bboxes, device):
     height, width, channel = image.shape
 
     num_boxes = len(bboxes)
+    # correct boxes exceeding image boundaries
+    # (x, y, ex, ey) are corrected coordinates of the box in the image. (dx, dy, edx, edy) are coordinates of the box in the cutout from the image.
     [dy, edy, dx, edx, y, ey, x, ex, w, h] = correct_bboxes(bboxes, width, height)
 
     img_boxes = np.zeros((num_boxes, 3, size[1], size[0]))
 
+    # cut out corrected boxes from the image and resize them
     for i in range(num_boxes):
         img_box = np.zeros((h[i], w[i], 3))
 
@@ -157,13 +160,9 @@ def detect_onet(onet, image, bboxes, device):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='MTCNN Demo')
-    parser.add_argument("--test_image", dest='test_image', help=
-    "test image path", default="../CL01_ZIC0/425.png", type=str)
-    parser.add_argument("--scale", dest='scale', help=
-    "scale the iamge", default=1, type=int)
-    parser.add_argument('--mini_lp', dest='mini_lp', help=
-    "Minimum lp to be detected. derease to increase accuracy. Increase to increase speed",
-                        default=(50, 15), type=int)
+    parser.add_argument("--test_image", dest='test_image', help="test image path", default="../CL01_ZIC0/425.png", type=str)
+    parser.add_argument("--scale", dest='scale', help="scale the iamge", default=1, type=int)
+    parser.add_argument('--mini_lp', dest='mini_lp', help="Minimum lp to be detected. derease to increase accuracy. Increase to increase speed", default=(50, 15), type=int)
 
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
