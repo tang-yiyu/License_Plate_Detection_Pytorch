@@ -64,11 +64,11 @@ if __name__ == '__main__':
         img_box = image[y1:y2+1, x1:x2+1, :]
         # cv2.imshow('cropped_image', img_box)
         # cv2.imwrite('cropped_image.png', img_box)
-        im = cv2.resize(img_box, (94, 24), interpolation=cv2.INTER_CUBIC)
-        im = (np.transpose(np.float32(im), (2, 0, 1)) - 127.5)*0.0078125
-        data = torch.from_numpy(im).float().unsqueeze(0).to(device)  # torch.Size([1, 3, 24, 94]) 
-        transfer = STN(data)
-        preds = lprnet(transfer)
+        img = cv2.resize(img_box, (94, 24), interpolation=cv2.INTER_CUBIC) # resize cropped image to (94, 24)
+        img = (np.transpose(np.float32(img), (2, 0, 1)) - 127.5) * 0.0078125
+        img_data = torch.from_numpy(img).float().unsqueeze(0).to(device)
+        transfer_img = STN(img_data)
+        preds = lprnet(transfer_img)
         preds = preds.cpu().detach().numpy()  # (1, 68, 18)    
         labels, pred_labels = decode(preds, CHARS)
     
