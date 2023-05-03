@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='LPR Demo')
     # parser.add_argument("-image", help='image path', default='data/ccpd_weather/吉BTW976.jpg', type=str)
-    parser.add_argument("-image", help='image path', default='data/cropped_image.png', type=str)
+    parser.add_argument("-image_path", help='image path', default='data/test/', type=str)
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -120,28 +120,42 @@ if __name__ == '__main__':
     
     print("Successful to build network!")
     
-    since = time.time()
-    image = cv2.imread(args.image)
-    im = cv2.resize(image, (94, 24), interpolation=cv2.INTER_CUBIC)
-    im = (np.transpose(np.float32(im), (2, 0, 1)) - 127.5)*0.0078125
-    data = torch.from_numpy(im).float().unsqueeze(0).to(device)  # torch.Size([1, 3, 24, 94]) 
-    transfer = STN(data)
-    preds = lprnet(transfer)
-    preds = preds.cpu().detach().numpy()  # (1, 68, 18)
-    
-    labels, pred_labels = decode(preds, CHARS)
-    print("model inference in {:2.3f} seconds".format(time.time() - since))
-            
-    # img = cv2ImgAddText(image, labels[0], (0, 0))
-    # img = cv2ImgAddText(image, labels[0], bbox)
-    
-    cv2.imshow("cropped", image)
+    image_names = os.listdir(args.image_path)
 
-    transformed_img = convert_image(transfer)
-    cv2.imshow('transformed', transformed_img)
-    cv2.imwrite('data/transformed_image.png', transformed_img)
+    count = 0
+    since = time.time()
+    for image_name in image_names:
+        image_full_path = os.path.join(args.image_path, image_name)
+        # image = cv2.imread(image_full_path)
+        image = cv2.imdecode(np.fromfile(image_full_path, dtype=np.uint8), 1)
+        im = cv2.resize(image, (94, 24), interpolation=cv2.INTER_CUBIC)
+        im = (np.transpose(np.float32(im), (2, 0, 1)) - 127.5)*0.0078125
+        data = torch.from_numpy(im).float().unsqueeze(0).to(device)  # torch.Size([1, 3, 24, 94]) 
+        # since = time.time()
+        transfer = STN(data)
+        preds = lprnet(transfer)
+        preds = preds.cpu().detach().numpy()  # (1, 68, 18)
+        
+        labels, pred_labels = decode(preds, CHARS)
+        # print("model inference in {:2.3f} seconds".format(time.time() - since))
+
+        print("Predict image {:s} result: {:s}".format(image_name.split('.')[0], labels[0]))
+        if labels[0] == image_name.split('.')[0]:
+            count += 1
     
-    # cv2.imshow("test", img)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+    print("Accuracy: {:.2f}%".format(count / len(image_names) * 100))
+    print("model inference in {:2.3f} seconds".format((time.time() - since) / len(image_names)))
+        # img = cv2ImgAddText(image, labels[0], (0, 0))
+        # img = cv2ImgAddText(image, labels[0], bbox)
+        
+        # # Save cropped image and transformed image
+        # cv2.imshow("cropped", image)
+
+        # transformed_img = convert_image(transfer)
+        # cv2.imshow('transformed', transformed_img)
+        # cv2.imwrite('data/transformed_image.png', transformed_img)
+        
+        # # cv2.imshow("test", img)
+        # cv2.waitKey()
+        # cv2.destroyAllWindows()
     
