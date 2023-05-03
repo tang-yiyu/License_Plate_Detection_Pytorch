@@ -160,30 +160,46 @@ def detect_onet(onet, image, bboxes, device):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='MTCNN Demo')
-    parser.add_argument("--test_image", dest='test_image', help="test image path", default="../CL01_ZIC0/425.png", type=str)
+    parser.add_argument("--test_image_path", dest='test_image_path', help="test image path", default="../CL01_ZIC/", type=str)
+    parser.add_argument("--save_path", dest='save_path', help="save path", default="../result/cropped/", type=str)
     parser.add_argument("--scale", dest='scale', help="scale the iamge", default=1, type=int)
     parser.add_argument('--mini_lp', dest='mini_lp', help="Minimum lp to be detected. derease to increase accuracy. Increase to increase speed", default=(50, 15), type=int)
 
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    image = cv2.imread(args.test_image)
-    image = cv2.resize(image, (0, 0), fx = args.scale, fy = args.scale, interpolation=cv2.INTER_CUBIC)
+    test_image_names = os.listdir(args.test_image_path)
+    # print(test_image_names)
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
 
-    start = time.time()
+    for test_image_name in test_image_names:
+        test_image_full_path = os.path.join(args.test_image_path, test_image_name)
+        image = cv2.imread(test_image_full_path)
+        image = cv2.resize(image, (0, 0), fx = args.scale, fy = args.scale, interpolation=cv2.INTER_CUBIC)
 
-    bboxes = create_mtcnn_net(image, args.mini_lp, device, p_model_path='weights/pnet_Weights', o_model_path='weights/onet_Weights')
+        start = time.time()
 
-    print("image predicted in {:2.3f} seconds".format(time.time() - start))
+        bboxes = create_mtcnn_net(image, args.mini_lp, device, p_model_path='weights/pnet_Weights', o_model_path='weights/onet_Weights')
 
-    for i in range(bboxes.shape[0]):
-        bbox = bboxes[i, :4]
-        # cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
-        
-    image = cv2.resize(image, (0, 0), fx = 1/args.scale, fy = 1/args.scale, interpolation=cv2.INTER_CUBIC)
-    cropped_image = image[int(bboxes[0, 1]):int(bboxes[0, 3]), int(bboxes[0, 0]):int(bboxes[0, 2])]
-    cv2.imshow('cropped_image', cropped_image)
-    cv2.imwrite('cropped_image.png', cropped_image)
-    # cv2.imshow('image', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        print("image predicted in {:2.3f} seconds".format(time.time() - start))
+
+        for i in range(bboxes.shape[0]):
+            bbox = bboxes[i, :4]
+            # cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
+        if bbox[0] < 0:
+            bbox[0] = 0
+        if bbox[1] < 0:
+            bbox[1] = 0
+        if bbox[2] > image.shape[1]:
+            bbox[2] = image.shape[1]
+        if bbox[3] > image.shape[0]:
+            bbox[3] = image.shape[0]
+        image = cv2.resize(image, (0, 0), fx = 1/args.scale, fy = 1/args.scale, interpolation=cv2.INTER_CUBIC)
+        cropped_image = image[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+        # cv2.imshow('cropped_image', cropped_image)
+        save_image_path = os.path.join(args.save_path, test_image_name)
+        cv2.imwrite(save_image_path, cropped_image)
+        # cv2.imshow('image', image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
