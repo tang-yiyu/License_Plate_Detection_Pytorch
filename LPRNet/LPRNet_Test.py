@@ -123,7 +123,8 @@ if __name__ == '__main__':
     image_names = os.listdir(args.image_path)
 
     count = 0
-    since = time.time()
+    runtime = 0
+    # since = time.time()
     for image_name in image_names:
         image_full_path = os.path.join(args.image_path, image_name)
         # image = cv2.imread(image_full_path)
@@ -131,12 +132,13 @@ if __name__ == '__main__':
         im = cv2.resize(image, (94, 24), interpolation=cv2.INTER_CUBIC)
         im = (np.transpose(np.float32(im), (2, 0, 1)) - 127.5)*0.0078125
         data = torch.from_numpy(im).float().unsqueeze(0).to(device)  # torch.Size([1, 3, 24, 94]) 
-        # since = time.time()
+        since = time.time()
         transfer = STN(data)
         preds = lprnet(transfer)
         preds = preds.cpu().detach().numpy()  # (1, 68, 18)
         
         labels, pred_labels = decode(preds, CHARS)
+        runtime += time.time() - since
         # print("model inference in {:2.3f} seconds".format(time.time() - since))
 
         print("Predict image {:s} result: {:s}".format(image_name.split('.')[0], labels[0]))
@@ -144,7 +146,8 @@ if __name__ == '__main__':
             count += 1
     
     print("Accuracy: {:.2f}%".format(count / len(image_names) * 100))
-    print("model inference in {:2.3f} seconds".format((time.time() - since) / len(image_names)))
+    print("model inference in {:2.3f} seconds".format(runtime / len(image_names)))
+    # print("model inference in {:2.3f} seconds".format((time.time() - since) / len(image_names)))
         # img = cv2ImgAddText(image, labels[0], (0, 0))
         # img = cv2ImgAddText(image, labels[0], bbox)
         
