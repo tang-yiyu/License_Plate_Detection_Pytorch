@@ -144,10 +144,7 @@ if __name__ == '__main__':
         print("Predict image {:s} result: {:s}".format(image_name.split('.')[0], labels[0]))
         if labels[0] == image_name.split('.')[0]:
             count += 1
-    
-    print("Accuracy: {:.2f}%".format(count / len(image_names) * 100))
-    print("model inference in {:2.3f} seconds".format(runtime / len(image_names)))
-    # print("model inference in {:2.3f} seconds".format((time.time() - since) / len(image_names)))
+
         # img = cv2ImgAddText(image, labels[0], (0, 0))
         # img = cv2ImgAddText(image, labels[0], bbox)
         
@@ -161,4 +158,7 @@ if __name__ == '__main__':
         # # cv2.imshow("test", img)
         # cv2.waitKey()
         # cv2.destroyAllWindows()
+    print("Accuracy: {:.2f}%".format(count / len(image_names) * 100))
+    print("model inference in {:2.3f} seconds".format(runtime / len(image_names)))
+    # print("model inference in {:2.3f} seconds".format((time.time() - since) / len(image_names)))
     
